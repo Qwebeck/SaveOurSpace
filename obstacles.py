@@ -18,23 +18,17 @@ class Obstacles(pg.sprite.Sprite):
         self.satInit = False
         super().__init__()
         #number and x coordinates of allowed satellits in one line
-        
-        
-
-
-
-
         #self.image = pg.transform.scale(self.game.player_img, (180, 180))
         self.obstacle_img = image
         self.image = pg.transform.scale(self.obstacle_img, (OBSTACLES_SIZE, OBSTACLES_SIZE))
         self.rect = self.image.get_rect()
         self.type = type
-        self.pos = vec(random.randint(0,self.game.WIDTH),random.randint(self.game.HEIGHT * 1.5,self.game.HEIGHT * 3))
+        self.pos = vec(random.randint(0,self.game.WIDTH),random.randint(int(self.game.HEIGHT * 1.5),self.game.HEIGHT * 3))
         self.rect.x = self.pos.x 
         self.rect.y = self.pos.y
         self.acc = vec(0,0)
         self.direction = vec(random.randint(-10,10)/10,1)
-        self.vel = vec(random.randint(0,self.game.rocket.lateralAcceleration) * self.direction.x,0)
+        self.vel = vec(random.randint(0,int(self.game.rocket.lateralAcceleration)) * self.direction.x,0)
         
         self.explosion = False
         self.frameNumber = 0
@@ -69,7 +63,7 @@ class Obstacles(pg.sprite.Sprite):
                 self.direction.y = 1
                 self.pos.x = Obstacles.obstaclesInLineX
                 self.pos.y = Obstacles.obstaclesInLineY
-                self.vel.x = random.randint(0,0.1 * self.game.rocket.lateralAcceleration) * self.direction.x
+                self.vel.x = random.randint(0,0.1 * int(self.game.rocket.lateralAcceleration)) * self.direction.x
                 Obstacles.obstaclesInLineVel = self.vel.x
                 Obstacles.obstaclesInLine = 0
                 self.satInit = 0
@@ -78,7 +72,7 @@ class Obstacles(pg.sprite.Sprite):
                 self.pos.y = random.randint(self.game.HEIGHT ,self.game.HEIGHT + 200)
                 self.direction.x = random.choice([1,-1])
                 self.direction.y = 1
-                self.vel.x = random.randint(0,0.1 * self.game.rocket.lateralAcceleration) * self.direction.x
+                self.vel.x = random.randint(0,int(self.game.planet.freeFallAccelaration)) * self.direction.x
             
             self.rect.x = self.pos.x
             self.rect.y = self.pos.y

@@ -23,14 +23,67 @@ class Game:
         self.game_over = False
         self.dt = 0
         self.font_name = pg.font.match_font(FONT_NAME)
-        self.game_folder = path.dirname(__file__)
-        self.img_folder = path.join(self.game_folder,"images")
+       
+       
+        self.load_data()
+        
+        self.background = self.spaceImage 
+        self.background_rect = self.background.get_rect()
+        self.second_background = self.spaceImage
+        self.second_background_rect = self.second_background.get_rect()
+        # Second background start just after first one 
+        self.second_background_rect.y = self.background_rect.bottom
+
+    
+    def init_entities(self):
+        #Rocket should be created first, because later there will be references to it in Game class 
+        self.planetAppeared = False
+        self.rocket = Rocket(self,x = self.WIDTH/2,
+                                  y = POSITION_CONSTANT * self.HEIGHT,
+                                  fuel=100, 
+                                  weight=165000,
+                                  missileThrustMultiplier=self.rocketStats[self.selectedRocket]['missle'],
+                                  allowed_collisions=self.rocketStats[self.selectedRocket]['allowed_collisions'],
+                                  # lateral Acceleration should be given in meters per second
+                                  lateralAcceleration=self.rocketStats[self.selectedRocket]['lateral_acc'],
+                                  distanceToPlanet=INITIAL_DISTANCE,
+                                  initialVelocity= 10,
+                                  image=self.availableRocketsArray[self.selectedRocket]
+                                  )
+                               
+        self.planet = Planet(game = self,
+                             weight= self.planetStats[self.selectedPlanet]['weight'],
+                             color = self.planetStats[self.selectedPlanet]['color'],
+                             radius = self.planetStats[self.selectedPlanet]['radius'],
+                             image = self.planetArray[self.selectedPlanet]
+                             ) # landscape is a background picture of planet
+        
+        self.planet_group.add(self.planet)
+        self.rocket.initMaxMissileThrust(self.planet.freeFallAccelaration)
+        
+        for i in range(NUMBER_OF_OBSTACLES):
+            if INITIAL_DISTANCE > ASTEROID_BELT_HEIGHT:
+                m = Obstacles(self,self.asteroids,random.choice(self.asteroidsArray),
+                            type=ObstacleType.Asteroid)
+            else:
+                m = Obstacles(self,self.asteroids,random.choice(self.asteroidsArray),
+                        type=ObstacleType.Satellit)
+
+            self.asteroids.add(m)
+            self.background = self.spaceImage
+
+
+        
+    def load_data(self):
         self.explosionAnimationArray = []
         self.meteorExplosionAnimation = []
         self.availableRocketsArray = []
         self.asteroidsArray = []
         self.sattelitsArray =  []
         self.planetArray = []
+        
+        self.game_folder = path.dirname(__file__)
+        self.img_folder = path.join(self.game_folder,"images")
         self.planetStats = [
             {'radius':6371000, 'weight':5.972 * 10 ** 24, 'color': BLUE},
             {'radius':6371000, 'weight':9.972 * 10 ** 24, 'color':RED},
@@ -38,9 +91,9 @@ class Game:
         ]
         
         self.rocketStats = [
-            {'allowed_collisions':20,'lateral_acc':20,'missle':2},
+            {'allowed_collisions':20,'lateral_acc':30,'missle':2},
             {'allowed_collisions':10,'lateral_acc':25,'missle':0.5},
-            {'allowed_collisions':30,'lateral_acc':10,'missle':1}
+            {'allowed_collisions':30,'lateral_acc':20,'missle':1}
         ]
         self.selectedPlanet = 0
         self.selectedRocket = 0
@@ -83,99 +136,6 @@ class Game:
         
 
         self.spaceImage = pg.image.load(path.join(self.img_folder,"Stars.jpg")).convert_alpha()
-        
-        self.background = self.spaceImage 
-        self.background_rect = self.background.get_rect()
-        self.second_background = self.spaceImage
-        self.second_background_rect = self.second_background.get_rect()
-        # Second background start just after first one 
-        self.second_background_rect.y = self.background_rect.bottom
-
-        # self.changedOnPlanetar = False 
-        # self.underneath_background = UnderneathBackground.Ancillary
-        
-        # Rocket should be created first, because later there will be references to it in Game class 
-        # self.rocket = Rocket(self,x = self.WIDTH/2,
-        #                           y = POSITION_CONSTANT * self.HEIGHT,
-        #                           fuel=100, 
-        #                           weight=165000,
-        #                           fuel_consumption=FuelConsumption.Low,
-        #                           sensitivity=Sensitivity.Medium,
-        #                           # lateral Acceleration should be given in meters per second
-        #                           lateralAcceleration=20,
-        #                           distanceToPlanet=INITIAL_DISTANCE,
-        #                           initialVelocity= 100,
-        #                           image=self.availableRocketsArray[self.selectedRocket]
-        #                           )
-        # self.planet = Planet(game = self,
-        #                      weight= 5.972 * 10 ** 24,
-        #                      weather=Weather.Sunny,
-        #                      landscape=None,
-        #                      radius=6371000,
-        #                      ) # landscape is a background picture of planet
-        
-        # self.planet_group.add(self.planet)
-        # self.rocket.initMaxMissileThrust(self.planet.freeFallAccelaration)
-
-        # for i in range(NUMBER_OF_OBSTACLES):
-        #     if INITIAL_DISTANCE > ASTEROID_BELT_HEIGHT:
-        #         m = Obstacles(self,self.asteroids,random.choice(self.asteroidsArray),
-        #                     type=ObstacleType.Asteroid)
-        #     else:
-        #         m = Obstacles(self,self.asteroids,random.choice(self.asteroidsArray),
-        #                 type=ObstacleType.Satellit)
-
-        #     self.asteroids.add(m)
-
-        
-        
-
-    # def set_planetar_background(self,background):
-    #     background = self.planetsArray[self.selectedPlanet]
-    #     if background = self.
-    
-    
-    def init_entities(self):
-        #Rocket should be created first, because later there will be references to it in Game class 
-        self.planetAppeared = False
-        self.rocket = Rocket(self,x = self.WIDTH/2,
-                                  y = POSITION_CONSTANT * self.HEIGHT,
-                                  fuel=100, 
-                                  weight=165000,
-                                  missileThrustMultiplier=self.rocketStats[self.selectedRocket]['missle'],
-                                  allowed_collisions=self.rocketStats[self.selectedRocket]['allowed_collisions'],
-                                  # lateral Acceleration should be given in meters per second
-                                  lateralAcceleration=self.rocketStats[self.selectedRocket]['lateral_acc'],
-                                  distanceToPlanet=INITIAL_DISTANCE,
-                                  initialVelocity= 300,
-                                  image=self.availableRocketsArray[self.selectedRocket]
-                                  )
-                               
-        self.planet = Planet(game = self,
-                             weight= self.planetStats[self.selectedPlanet]['weight'],
-                             color = self.planetStats[self.selectedPlanet]['color'],
-                             radius = self.planetStats[self.selectedPlanet]['radius'],
-                             image = self.planetArray[self.selectedPlanet]
-                             ) # landscape is a background picture of planet
-        
-        self.planet_group.add(self.planet)
-        self.rocket.initMaxMissileThrust(self.planet.freeFallAccelaration)
-        
-        for i in range(NUMBER_OF_OBSTACLES):
-            if INITIAL_DISTANCE > ASTEROID_BELT_HEIGHT:
-                m = Obstacles(self,self.asteroids,random.choice(self.asteroidsArray),
-                            type=ObstacleType.Asteroid)
-            else:
-                m = Obstacles(self,self.asteroids,random.choice(self.asteroidsArray),
-                        type=ObstacleType.Satellit)
-
-            self.asteroids.add(m)
-            self.background = self.spaceImage
-
-
-        
-    def load_data(self):
-        pass
 
     def run(self):
         self.playing = True
@@ -204,7 +164,7 @@ class Game:
         else:
             image = self.fireTraceArray['strongTrace']
 
-        trace = pg.transform.scale(image, (ROCKET_W, int(self.rocket.missileThrust*ROCKET_H*0.01)))
+        trace = pg.transform.scale(image, (ROCKET_W, int(self.rocket.missileThrust*ROCKET_H*0.05)))
         trace_rect = trace.get_rect()
         trace_rect.x = self.rocket.rect.x
         trace_rect.y = self.rocket.rect.center[1] + ROCKET_H/2
@@ -220,14 +180,20 @@ class Game:
         self.background_rect.y -= int(new_pos)
         self.second_background_rect.y -= int(new_pos)
         
-        if self.background_rect.bottom < 0:
-            self.background_rect.y = self.second_background_rect.bottom
-           
-            
-            
+        # self.rocket.vel > 0 -- means that object is moving up
 
-        if self.second_background_rect.bottom < 0 :
+        if self.background_rect.bottom < 0 and self.rocket.vel.y > 0:
+            self.background_rect.y = self.second_background_rect.bottom
+        
+        elif self.background_rect.top > self.HEIGHT and self.rocket.vel.y < 0:
+            
+            self.background_rect.y = self.second_background_rect.y -self.background_rect.size[1]
+
+        if self.second_background_rect.bottom < 0 and self.rocket.vel.y > 0:
             self.second_background_rect.y = self.background_rect.bottom 
+        elif self.second_background_rect.top > self.HEIGHT and self.rocket.vel.y < 0:
+            
+            self.second_background_rect.y = self.background_rect.y -self.background_rect.size[1]
             
     
     def draw_background(self):
@@ -235,15 +201,6 @@ class Game:
         self.screen.blit(self.background,self.background_rect)
         self.screen.blit(self.second_background,self.second_background_rect)
 
-
-    # def set_planetar_background(self):
-        # If y of background is smaller , than this rect is running now  
-        # if not self.changedOnPlanetar:
-            # if self.background_rect.y < self.second_background_rect.y:
-                # self.second_background = self.planetsArray[self.selectedPlanet]
-            # else: 
-                # self.background = self.planetsArray[self.selectedPlanet]
-            # self.changedOnPlanetar= True
 
     def draw(self):
         # self.screen.blit(self.background,(0,0))
@@ -265,14 +222,12 @@ class Game:
         self.asteroids.draw(self.screen)
         
         self.draw_data()
-        #pg.draw.rect(self.screen,YELLOW,self.rocket.rect)
+        
         pg.display.flip()
 
     def draw_text(self, text, size, color, x, y, font):
-        # if not number:
+      
         font = pg.font.Font(font, size)
-        # else :
-        #     font = pg.font.Font(self.font_name, size * 2)
         text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
         text_rect.topleft = (x, y)
@@ -281,7 +236,7 @@ class Game:
     
     def showMenu(self):
         running = True
-        params = {'planet':False,'rocket':False,'start':False}
+        params = {'planet':False,'rocket':False}
         current_param = 0
         last_update = pg.time.get_ticks()
         while running:
@@ -309,8 +264,7 @@ class Game:
                             YELLOW,
                             0.45 * self.WIDTH,
                             0.2 * self.HEIGHT, 
-                            FONT_NAME)
-                
+                            FONT_NAME)     
                 self.draw_text("Planet weight", 
                             21, 
                             YELLOW,
@@ -392,22 +346,15 @@ class Game:
                             0.45 * self.WIDTH,
                             0.20 * self.HEIGHT, 
                             FONT_NAME)
-                self.process_keys_in_menu('rocket',params)
-            else :
-                running = self.process_keys_in_menu('start',params)
-                self.draw_text("Press Enter to start", 
-                            31, 
-                            YELLOW,
-                            0.45 * self.WIDTH,
-                            0.5 * self.HEIGHT, 
-                            FONT_NAME)
-            
+                running =  self.process_keys_in_menu('rocket',params)
+         
             planet = self.planetArray[self.selectedPlanet]
             
             rocket = pg.transform.scale(self.availableRocketsArray[self.selectedRocket],(2 * ROCKET_W,2 * ROCKET_H))
             
             self.screen.blit(planet,(0,0.9 * self.HEIGHT))
             self.screen.blit(rocket,(0.9 * self.WIDTH,0.8 * self.HEIGHT))
+            
             pg.display.flip()
 
     def process_keys_in_menu(self,parametr,params=[],*args):
@@ -435,12 +382,14 @@ class Game:
                 else : self.selectedRocket = len(self.availableRocketsArray) - 1 
                 return True
         elif keys[pg.K_RETURN]:
+            
             params[parametr] = True
+            
             if params['planet'] and params['rocket']:
-                
+                # Starts game here
                 self.background = self.spaceImage
                 return False
-
+        return True
     
     
     def quit(self):
