@@ -47,13 +47,13 @@ class Obstacles(pg.sprite.Sprite):
                 # Because rocket can also move up
                 self.type = ObstacleType.Asteroid
             else: 
-                self.type = random.choice([ObstacleType.Satellit,ObstacleType.Asteroid])
+                self.type = random.choice([ObstacleType.Satellit,ObstacleType.Asteroid,ObstacleType.AidSatellit])
                 if self.type == ObstacleType.Satellit:
-                    self.image = pg.transform.scale(random.choice(self.game.sattelitsArray),(OBSTACLES_SIZE, OBSTACLES_SIZE))
+                    self.image = pg.transform.scale(self.game.sattelitsArray[0],(OBSTACLES_SIZE, OBSTACLES_SIZE))
                 else:
-                    self.image = pg.transform.scale(random.choice(self.game.asteroidsArray),(OBSTACLES_SIZE, OBSTACLES_SIZE))
+                    self.image = pg.transform.scale(random.choice(self.game.asteroidsArray[1:2]),(OBSTACLES_SIZE, OBSTACLES_SIZE))
         
-            if self.satInit == True and self.type == ObstacleType.Satellit and Obstacles.obstaclesInLine < Obstacles.maxObstaclesInLine:
+            if self.satInit == True and self.type == ObstacleType.Satellit and Obstacles.obstaclesInLine < Obstacles.maxObstaclesInLine or self.type == ObstacleType.AidSatellit:
                 Obstacles.obstaclesInLine += 1
                 self.pos.x = Obstacles.obstaclesInLineX
                 self.vel.x = Obstacles.obstaclesInLineVel
@@ -63,7 +63,7 @@ class Obstacles(pg.sprite.Sprite):
                 
                 self.direction.y = 1
 
-            elif self.type == ObstacleType.Satellit:
+            elif self.type == ObstacleType.Satellit or self.type == ObstacleType.AidSatellit:
                 Obstacles.obstaclesInLineX = random.randint(OBSTACLES_SIZE,self.game.WIDTH-OBSTACLES_SIZE)
                 Obstacles.obstaclesInLineY = random.randint(self.game.HEIGHT ,self.game.HEIGHT + 200)
                 Obstacles.obstaclesDirection = random.choice([1,-1])

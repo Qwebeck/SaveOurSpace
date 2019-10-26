@@ -10,7 +10,7 @@ vec = pg.math.Vector2
 
 
 class Rocket(pg.sprite.Sprite):
-    def __init__(self, game, x, y,fuel, weight, missileThrustMultiplier, allowed_collisions,lateralAcceleration,distanceToPlanet, initialVelocity, image ):
+    def __init__(self, game, x, y, missileThrustMultiplier, allowed_collisions,lateralAcceleration,distanceToPlanet, initialVelocity, image ):
         self.groups = game.all_sprites,game.player_group
         pg.sprite.Sprite.__init__(self, self.groups)
         self.inMesosphere = False
@@ -19,30 +19,26 @@ class Rocket(pg.sprite.Sprite):
         self.MTmultiplier = missileThrustMultiplier
         self.image = pg.transform.scale(image, (ROCKET_W, ROCKET_H))
         self.rect = self.image.get_rect()
-        #self.image = pg.image.load('rocket1.jpg')
-        #self.rect = self.image.get_rect().scale(30,30)
-
+       
+        self.acceleration = vec(0, 0)
         self.vel = vec(0, initialVelocity)
         self.pos = vec(x, y)
         self.rect.x = x
         self.rect.y = y
         
-        self.fuel = fuel
-        self.weight = weight
         self.game_over = False
-        # parameter that descibes how fast the roket will go in different sides
+        # parameter that descibes how fast the roket will move in right and in left
         self.lateralAcceleration = lateralAcceleration
-        self.velocityReduced = True
-
+        #allowed collisions used to calculate current armour by formula arm = ( 1 - current_collisions/allowed_collisions) * 100
         self.allowed_collisions = allowed_collisions
         self.armour = 100
         self.collisions = 0
         self.distanceToPlanet = distanceToPlanet
-        
+        # random init values. Assigning another values in function initMaxMissileThrust, that called every time when constructor is called
         self.maxMissileThrust = 1
         self.missileThrust = 0
        
-        self.acceleration = vec(0, 0)
+       
         self.started = True 
         self.keys = None
         self.landing = False
@@ -51,20 +47,20 @@ class Rocket(pg.sprite.Sprite):
         self.last_update = 0
         self.frameNumber = 0
         
-    # because there are conflicts in main constructor. You can't create planet object without created rocket and vice versa
+    # Dependecies in main constructor,don't allow you to create a planet object
+    #  without created rocket and vice versa, but for calculating missile thrust we need to have both of that objects.
+    # So was decided to create an initMaxMissileThrust to handle this exeption
     def initMaxMissileThrust(self,freeFallAccelaration):
         # Maximal allowed accelaration is acceleration of free fall on planet times . predefind upper boundary
         self.maxMissileThrust = calculateMaxMissleThrust(self,self.game.planet)
         
         self.maxMissileThrust = self.game.planet.freeFallAccelaration * self.MTmultiplier
         
-        # Because rocket should wait untill user will press first key
+        # Randomly choosen multyplier for iniy of current missile thrust
         self.missileThrust = 0.8 * self.maxMissileThrust
 
 
     def move(self):
-        #Lesser because of pygame cordinate system, which increases from up to down
-        
         if self.landed:
              return
         
@@ -75,22 +71,25 @@ class Rocket(pg.sprite.Sprite):
 
         
         
-        # Function return acceleration in meters per second square
+        # Function that calculates acceleration, depending on free fall acceleration for current planer 
+        # and rocket braking power
         self.acceleration.y = calculateAcceleration(self,self.game.planet,self.missileThrust)
 
         self.vel += self.acceleration * self.game.dt
-        # Converting distance covered in meters to pixels
-        
+        # Vector of speed is stored in meters. So after multiplying self.vel (V) and selt.game.dt (t) 
+        # we get distance( S = V * t) in meters. To know how to move rocket by plane we divide it by constant 
+        # METERS_IN_ONE_PIXEL
         coveredDistance = ( self.vel * self.game.dt ) / METERS_IN_ONE_PIXEL 
-        # Rocket can move from side to side in any point of screen
         self.pos.x += coveredDistance.x * SMOOTHING_CONSTANT
-        
         self.rect.x = self.pos.x
 
 
       
         
-        # To make better impression of movement in the center of screen rocket will stop 
+        #  At some moment rocket will stuck in defined coordinates on plane.
+        #  Than movement impression will be created by moving background 
+        #  Below method assures that when rocket coordinates are equal to predifened coordinates 
+        #  where to stay.
         if self.rect.y < self.game.HEIGHT * POSITION_CONSTANT  or self.distanceToPlanet <= self.game.HEIGHT * POSITION_CONSTANT *  METERS_IN_ONE_PIXEL:
             self.pos.y += coveredDistance.y
             self.rect.y = self.pos.y
@@ -107,29 +106,19 @@ class Rocket(pg.sprite.Sprite):
     def processKeys(self):
         if self.keys[pg.K_LEFT]:
             self.acceleration.x = -self.lateralAcceleration
-            
         elif self.keys[pg.K_RIGHT]:
             self.acceleration.x = self.lateralAcceleration
-            
         elif self.keys[pg.K_UP]:
             self.change_thrust(Command.IncreaseThrust)
-            
         elif self.keys[pg.K_DOWN]:
             self.change_thrust(Command.DecreaseThrust)
-            
         elif self.keys[pg.K_SPACE]:
-            
-            self.landing = True
-            
-        else:
-            pass
+            self.landing = True           
         self.keys = None
 
     def update(self):
-
         if self.armour <= 0:
             self.explosionAnimation()
-        
         if self.game_over or self.landed:
             return
         self.processKeys()
@@ -168,9 +157,16 @@ class Rocket(pg.sprite.Sprite):
     def collide(self):
         for obstacle in self.game.asteroids:
             if self.rect.colliderect(obstacle):
+                # not obstacle.explosion allows us to assure that rocket doesn't collide with instance of class, 
+                # that explodes. This situation is handled because there could be two objects on map,
+                # that had collided. It means, that they are still on map, because explotion animation is playing, but they don't exist as instances, 
+                # that should harm rocket in any way
                 if obstacle.type == ObstacleType.Asteroid and not obstacle.explosion:
                     self.collisions += 1
                     self.armour = round(1 - self.collisions/self.allowed_collisions,1) * 100
+                elif obstacle.type == ObstacleType.AidSatellit and not obstacle.explosion:
+                    self.score += 1
+                    self.collisions -= 1
                 elif obstacle.type == ObstacleType.Satellit and not obstacle.explosion:     
                     self.score += 1  
                 obstacle.exploid()
@@ -178,7 +174,7 @@ class Rocket(pg.sprite.Sprite):
     def onPlanetSurface(self):
         # if speed is smaller than ten meters per second than success
         self.landed = True
-        if self.vel.y < 10 * self.armour:
+        if self.vel.y < 100 * self.armour:
             self.distanceToPlanet = 0
             self.result = Result.Success
             self.vel = vec(0,0)

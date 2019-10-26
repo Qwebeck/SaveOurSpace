@@ -40,14 +40,13 @@ class Game:
         self.planetAppeared = False
         self.rocket = Rocket(self,x = self.WIDTH/2,
                                   y = POSITION_CONSTANT * self.HEIGHT,
-                                  fuel=100, 
-                                  weight=165000,
+                                  # weight is used to calculate how hard should  
                                   missileThrustMultiplier=self.rocketStats[self.selectedRocket]['missle'],
                                   allowed_collisions=self.rocketStats[self.selectedRocket]['allowed_collisions'],
                                   # lateral Acceleration should be given in meters per second
                                   lateralAcceleration=self.rocketStats[self.selectedRocket]['lateral_acc'],
                                   distanceToPlanet=self.planetStats[self.selectedPlanet]['initialHeight'],
-                                  initialVelocity= 1000,
+                                  initialVelocity= 100,
                                   image=self.availableRocketsArray[self.selectedRocket]
                                   )
                                
@@ -56,7 +55,7 @@ class Game:
                              color = self.planetStats[self.selectedPlanet]['color'],
                              radius = self.planetStats[self.selectedPlanet]['radius'],
                              image = self.planetArray[self.selectedPlanet]
-                             ) # landscape is a background picture of planet
+                             ) 
         
         self.planet_group.add(self.planet)
         self.rocket.initMaxMissileThrust(self.planet.freeFallAccelaration)
@@ -91,9 +90,9 @@ class Game:
         ]
         
         self.rocketStats = [
-            {'allowed_collisions':200,'lateral_acc':20,'missle':6, 'describeArmour':'Strong armour','describeManevrity':'Medium maneuverability','decribeBrakingAbility':'Perfect'},
-            {'allowed_collisions':10,'lateral_acc':30,'missle':3,'describeArmour':'Medium armour','describeManevrity':'High maneuverability','decribeBrakingAbility':'Medium'},
-            {'allowed_collisions':5,'lateral_acc':20,'missle':1.5, 'describeArmour':'Poor armour','describeManevrity':'Medium maneuverability','decribeBrakingAbility':'Poor'}
+            {'allowed_collisions':20,'lateral_acc':20,'missle': 2, 'describeArmour':'Strong armour','describeManevrity':'Low maneuverability','decribeBrakingAbility':'Perfect'},
+            {'allowed_collisions':10,'lateral_acc':20,'missle': 4,'describeArmour':'Medium armour','describeManevrity':'Medium maneuverability','decribeBrakingAbility':'Medium'},
+            {'allowed_collisions':5,'lateral_acc':30,'missle': 7, 'describeArmour':'Poor armour','describeManevrity':'High maneuverability','decribeBrakingAbility':'Poor'}
         ]
         self.selectedPlanet = 0
         self.selectedRocket = 0
@@ -166,8 +165,8 @@ class Game:
             image = self.fireTraceArray['weakTrace']
         else:
             image = self.fireTraceArray['strongTrace']
-
-        trace = pg.transform.scale(image, (ROCKET_W, int(self.rocket.missileThrust*ROCKET_H*0.05)))
+        # self.rocket.missileThrust/self.rocket.maxMissileThrust multiplier that shows how big is power of of thrust
+        trace = pg.transform.scale(image, (ROCKET_W, int(self.rocket.missileThrust/self.rocket.maxMissileThrust *ROCKET_H)))
         trace_rect = trace.get_rect()
         trace_rect.x = self.rocket.rect.x
         trace_rect.y = self.rocket.rect.center[1] + ROCKET_H/2
@@ -260,12 +259,7 @@ class Game:
         running = True
         params = {'planet':False,'rocket':False}
         current_param = 0
-        # last_update = pg.time.get_ticks()
         while running:
-            
-            # dt =  pg.time.get_ticks() - last_update
-            # if dt < self.clock.tick(60) / 1000:
-            #     continue
             last_update = pg.time.get_ticks()
             stats = self.planetStats[self.selectedPlanet]
             self.move_background(menu = True)
@@ -281,59 +275,59 @@ class Game:
                             0.62 * self.WIDTH,
                             0.65 * self.HEIGHT, 
                             FONT_NAME)     
-            if not params['planet']:    
-                self.draw_text("Planet weight:", 
-                            30, 
+            if not params['planet']:
+                self.draw_text("Choose a planet", 
+                            35, 
                             YELLOW,
-                            0.1 * self.WIDTH,
+                            0.2 * self.WIDTH,
                             0.1 * self.HEIGHT, 
-                            FONT_NAME)
-                self.draw_text(str(self.planetStats[self.selectedPlanet]['describeWeight']), 
-                            30, 
-                            YELLOW,
-                            0.1 * self.WIDTH,
-                            0.15 * self.HEIGHT, 
-                            FONT_NAME)
-                self.draw_text("Start height:", 
+                            FONT_NAME)    
+                self.draw_text("Planet weight:", 
                             30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.2 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text(str(self.planetStats[self.selectedPlanet]['describeHeight']), 
+                self.draw_text(str(self.planetStats[self.selectedPlanet]['describeWeight']), 
                             30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.25 * self.HEIGHT, 
                             FONT_NAME)
+                self.draw_text("Start height:", 
+                            30, 
+                            YELLOW,
+                            0.1 * self.WIDTH,
+                            0.3 * self.HEIGHT, 
+                            FONT_NAME)
+                self.draw_text(str(self.planetStats[self.selectedPlanet]['describeHeight']), 
+                            30, 
+                            YELLOW,
+                            0.1 * self.WIDTH,
+                            0.35 * self.HEIGHT, 
+                            FONT_NAME)
                 self.draw_text("Asteroids:", 
                             30, 
                             YELLOW,
                             0.5 * self.WIDTH,
-                            0.1 * self.HEIGHT, 
+                            0.2 * self.HEIGHT, 
                             FONT_NAME)
                 self.draw_text(str(self.planetStats[self.selectedPlanet]['describeAsteroids']), 
                             30, 
                             YELLOW,
                             0.5 * self.WIDTH,
-                            0.15 * self.HEIGHT, 
+                            0.25 * self.HEIGHT, 
                             FONT_NAME)
 
                 self.process_keys_in_menu('planet',params)
 
             elif not params['rocket']:
-                self.draw_text("Baking ability: ", 
-                            30, 
+                self.draw_text("Choose a rocket", 
+                            35, 
                             YELLOW,
-                            0.05 * self.WIDTH,
+                            0.2 * self.WIDTH,
                             0.1 * self.HEIGHT, 
-                            FONT_NAME)
-                self.draw_text(str(self.rocketStats[self.selectedRocket]['decribeBrakingAbility']), 
-                            30, 
-                            YELLOW,
-                            0.1 * self.WIDTH,
-                            0.15 * self.HEIGHT, 
-                            FONT_NAME)
+                            FONT_NAME)   
                 self.draw_text("Manevreability: ", 
                             30, 
                             YELLOW,
@@ -362,14 +356,16 @@ class Game:
                
                        
                 running =  self.process_keys_in_menu('rocket',params)
-         
+
             planet = self.planetArray[self.selectedPlanet]
             
             rocket = pg.transform.scale(self.availableRocketsArray[self.selectedRocket],(2 * ROCKET_W,2 * ROCKET_H))
             
             
             self.screen.blit(planet,(0,0.9 * self.HEIGHT))
-            self.screen.blit(rocket,(0.9 * self.WIDTH,0.8 * self.HEIGHT))
+            y = 0.2 * self.HEIGHT if params['planet'] else  0.8 * self.HEIGHT
+            
+            self.screen.blit(rocket,(0.9 * self.WIDTH,y))
             self.afterMenu = True
             pg.display.flip()
 
@@ -567,3 +563,6 @@ class Game:
        self.rocket.update()
        #self.all_sprites.update()
       
+g = Game()
+
+g.run()
