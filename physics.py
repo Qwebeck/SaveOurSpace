@@ -18,9 +18,7 @@ def calculateMaxMissleThrust(Rocket,Planet):
     # Calculated next formula
     # First escape velocity / time in seconds that usually takes a launch ( 9 minutes. Source - nasa website )
     maxThrust = sqrt(( 2 * Planet.weight * 6.67 ) / ( 10 ** 11 * Planet.radius )) 
-    print(maxThrust)
+    
     return int(maxThrust)
 
 
-def calculateWindInfluence(rocket,wind_power):
-    return 0

@@ -6,7 +6,7 @@ from enums import *
 from physics import *
 from planet import *
 from obstacles import *
-
+import sys
 class Game:
     def __init__(self):
         pg.init()
@@ -23,7 +23,7 @@ class Game:
         self.game_over = False
         self.dt = 0
         self.font_name = pg.font.match_font(FONT_NAME)
-       
+        self.afterMenu = True
        
         self.load_data()
         
@@ -46,8 +46,8 @@ class Game:
                                   allowed_collisions=self.rocketStats[self.selectedRocket]['allowed_collisions'],
                                   # lateral Acceleration should be given in meters per second
                                   lateralAcceleration=self.rocketStats[self.selectedRocket]['lateral_acc'],
-                                  distanceToPlanet=INITIAL_DISTANCE,
-                                  initialVelocity= 10,
+                                  distanceToPlanet=self.planetStats[self.selectedPlanet]['initialHeight'],
+                                  initialVelocity= 1000,
                                   image=self.availableRocketsArray[self.selectedRocket]
                                   )
                                
@@ -61,8 +61,8 @@ class Game:
         self.planet_group.add(self.planet)
         self.rocket.initMaxMissileThrust(self.planet.freeFallAccelaration)
         
-        for i in range(NUMBER_OF_OBSTACLES):
-            if INITIAL_DISTANCE > ASTEROID_BELT_HEIGHT:
+        for i in range(self.planetStats[self.selectedPlanet]['numberOfAster']):
+            if self.planetStats[self.selectedPlanet]['initialHeight'] > ASTEROID_BELT_HEIGHT:
                 m = Obstacles(self,self.asteroids,random.choice(self.asteroidsArray),
                             type=ObstacleType.Asteroid)
             else:
@@ -85,15 +85,15 @@ class Game:
         self.game_folder = path.dirname(__file__)
         self.img_folder = path.join(self.game_folder,"images")
         self.planetStats = [
-            {'radius':6371000, 'weight':5.972 * 10 ** 24, 'color': BLUE},
-            {'radius':6371000, 'weight':9.972 * 10 ** 24, 'color':RED},
+            {'initialHeight':20000,'radius':6371000*2, 'weight':5.972 * 10 ** 24, 'color': BLUE,'describeWeight':'Very heavy','describeHeight':'Very high', 'describeAsteroids': 'Some big number', 'numberOfAster':10},
+            {'initialHeight':10000,'radius':6371000, 'weight':10.972 * 10 ** 24, 'color':RED,'describeWeight':'Normal','describeHeight':'Not very high', 'describeAsteroids':'Even bigger number', 'numberOfAster':20},
 
         ]
         
         self.rocketStats = [
-            {'allowed_collisions':20,'lateral_acc':30,'missle':2},
-            {'allowed_collisions':10,'lateral_acc':25,'missle':0.5},
-            {'allowed_collisions':30,'lateral_acc':20,'missle':1}
+            {'allowed_collisions':200,'lateral_acc':20,'missle':6, 'describeArmour':'Strong armour','describeManevrity':'Medium maneuverability','decribeBrakingAbility':'Perfect'},
+            {'allowed_collisions':10,'lateral_acc':30,'missle':3,'describeArmour':'Medium armour','describeManevrity':'High maneuverability','decribeBrakingAbility':'Medium'},
+            {'allowed_collisions':5,'lateral_acc':20,'missle':1.5, 'describeArmour':'Poor armour','describeManevrity':'Medium maneuverability','decribeBrakingAbility':'Poor'}
         ]
         self.selectedPlanet = 0
         self.selectedRocket = 0
@@ -142,19 +142,22 @@ class Game:
         self.showMenu()
         self.init_entities()
         while self.playing:
-            #Number of miliseconds from last farme
-            self.dt = self.clock.tick(60) / 1000
-            for event in pg.event.get():
-                
-                if event.type == pg.QUIT:
-                   
-                    self.playing = False
-            if not self.rocket.landed:
-                
-                self.rocket.keys = pg.key.get_pressed()
-                self.screen.fill((0,0,0))  
-                self.update()
-            self.draw()
+            if self.afterMenu == True:
+                #Number of miliseconds from last farme
+                self.dt = self.clock.tick(60) / 1000
+                for event in pg.event.get():
+                    
+                    if event.type == pg.QUIT:
+                    
+                        self.playing = False
+                if not self.rocket.landed:
+                    
+                    self.rocket.keys = pg.key.get_pressed()
+                    self.screen.fill((0,0,0))  
+                    self.update()
+                self.draw()
+            if self.rocket.game_over:
+                self.process_keys_end_game()
     
     def draw_trace(self):
         if self.rocket.missileThrust == 0:
@@ -170,8 +173,23 @@ class Game:
         trace_rect.y = self.rocket.rect.center[1] + ROCKET_H/2
         self.screen.blit(trace,trace_rect)
 
-    def move_background(self):
-        new_pos = self.rocket.vel.y * self.dt/METERS_IN_ONE_PIXEL * SMOOTHING_CONSTANT
+    def move_background(self,menu = False):
+        
+        if menu:
+            new_pos = 20 * self.clock.tick(60) / 1000 /METERS_IN_ONE_PIXEL * SMOOTHING_CONSTANT
+            if self.background_rect.bottom < 0:
+                self.background_rect.y = self.second_background_rect.bottom
+            if self.second_background_rect.bottom < 0:
+                self.second_background_rect.y = self.background_rect.bottom
+            self.background_rect.y -= int(new_pos)
+            self.second_background_rect.y -= int(new_pos)
+            
+            self.screen.blit(self.background,self.background_rect)
+            self.screen.blit(self.second_background,self.second_background_rect)
+
+            return
+        else:
+            new_pos = self.rocket.vel.y * self.dt/METERS_IN_ONE_PIXEL * SMOOTHING_CONSTANT
         # In such way i prevent black holes, that could appear between two backgrounds ,
         
         # Int cast made because when we make operations on numerical we can get 
@@ -181,6 +199,8 @@ class Game:
         self.second_background_rect.y -= int(new_pos)
         
         # self.rocket.vel > 0 -- means that object is moving up
+ 
+        
 
         if self.background_rect.bottom < 0 and self.rocket.vel.y > 0:
             self.background_rect.y = self.second_background_rect.bottom
@@ -189,7 +209,7 @@ class Game:
             
             self.background_rect.y = self.second_background_rect.y -self.background_rect.size[1]
 
-        if self.second_background_rect.bottom < 0 and self.rocket.vel.y > 0:
+        if self.second_background_rect.bottom < 0 and (menu or self.rocket.vel.y > 0 ):
             self.second_background_rect.y = self.background_rect.bottom 
         elif self.second_background_rect.top > self.HEIGHT and self.rocket.vel.y < 0:
             
@@ -204,11 +224,15 @@ class Game:
 
     def draw(self):
         # self.screen.blit(self.background,(0,0))
-        self.screen.fill((0,0,0))
-        if not self.planetAppeared:
-            self.move_background()
+     
         self.draw_background()
-        self.draw_trace()
+        if not self.planetAppeared and not self.rocket.game_over:
+            self.move_background()
+            self.draw_trace()
+            self.asteroids.draw(self.screen)
+        
+        
+        
         
         if self.rocket.distanceToPlanet <= self.HEIGHT * METERS_IN_ONE_PIXEL * 2:
             self.rocket.inStratosphere = True 
@@ -218,9 +242,7 @@ class Game:
              self.planetAppeared = True
              self.rocket.inStratosphere = True  
         
-        self.player_group.draw(self.screen) 
-        self.asteroids.draw(self.screen)
-        
+        self.player_group.draw(self.screen)    
         self.draw_data()
         
         pg.display.flip()
@@ -238,157 +260,150 @@ class Game:
         running = True
         params = {'planet':False,'rocket':False}
         current_param = 0
-        last_update = pg.time.get_ticks()
+        # last_update = pg.time.get_ticks()
         while running:
-            dt =  pg.time.get_ticks() - last_update
-            if dt < 100:
-                continue
+            
+            # dt =  pg.time.get_ticks() - last_update
+            # if dt < self.clock.tick(60) / 1000:
+            #     continue
             last_update = pg.time.get_ticks()
             stats = self.planetStats[self.selectedPlanet]
-            self.screen.blit(self.background, (0,0))
-            if not params['planet']:    
-                self.draw_text("To choose planet", 
+            self.move_background(menu = True)
+            self.draw_text("Navigate with right/left arrows", 
                             21, 
                             YELLOW,
                             0.45 * self.WIDTH,
-                            0.1 * self.HEIGHT, 
+                            0.6 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text("navigate with right/left arrows", 
+            self.draw_text("Press Enter to submit", 
                             21, 
                             YELLOW,
-                            0.45 * self.WIDTH,
-                            0.15 * self.HEIGHT, 
-                            FONT_NAME)
-                self.draw_text("Press Enter to submit", 
-                            21, 
-                            YELLOW,
-                            0.45 * self.WIDTH,
-                            0.2 * self.HEIGHT, 
+                            0.62 * self.WIDTH,
+                            0.65 * self.HEIGHT, 
                             FONT_NAME)     
-                self.draw_text("Planet weight", 
-                            21, 
+            if not params['planet']:    
+                self.draw_text("Planet weight:", 
+                            30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.1 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text(str(self.planetStats[self.selectedPlanet]['weight']) + " kg", 
-                            21, 
+                self.draw_text(str(self.planetStats[self.selectedPlanet]['describeWeight']), 
+                            30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.15 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text("Planet radius", 
-                            21, 
+                self.draw_text("Start height:", 
+                            30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.2 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text(str(self.planetStats[self.selectedPlanet]['radius']) + " m", 
-                            21, 
+                self.draw_text(str(self.planetStats[self.selectedPlanet]['describeHeight']), 
+                            30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.25 * self.HEIGHT, 
                             FONT_NAME)
+                self.draw_text("Asteroids:", 
+                            30, 
+                            YELLOW,
+                            0.5 * self.WIDTH,
+                            0.1 * self.HEIGHT, 
+                            FONT_NAME)
+                self.draw_text(str(self.planetStats[self.selectedPlanet]['describeAsteroids']), 
+                            30, 
+                            YELLOW,
+                            0.5 * self.WIDTH,
+                            0.15 * self.HEIGHT, 
+                            FONT_NAME)
+
                 self.process_keys_in_menu('planet',params)
 
             elif not params['rocket']:
-                self.draw_text("Allowed collisions", 
-                            21, 
+                self.draw_text("Baking ability: ", 
+                            30, 
                             YELLOW,
                             0.05 * self.WIDTH,
                             0.1 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text(str(self.rocketStats[self.selectedRocket]['allowed_collisions']), 
-                            21, 
+                self.draw_text(str(self.rocketStats[self.selectedRocket]['decribeBrakingAbility']), 
+                            30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.15 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text("Lateral acceleration", 
-                            21, 
+                self.draw_text("Manevreability: ", 
+                            30, 
                             YELLOW,
                             0.05 * self.WIDTH,
                             0.2 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text(str(self.rocketStats[self.selectedRocket]['lateral_acc']) + " m/s^2", 
-                            21, 
+                self.draw_text(str(self.rocketStats[self.selectedRocket]['describeManevrity']), 
+                            30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.25 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text("Acceleration by missle", 
-                            21, 
+                self.draw_text("Armour: ", 
+                            30, 
                             YELLOW,
                             0.05 * self.WIDTH,
                             0.3 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text(str(self.rocketStats[self.selectedRocket]['missle']) + " * g m/s^2", 
-                            21, 
+                self.draw_text(str(self.rocketStats[self.selectedRocket]['describeArmour']), 
+                            30, 
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.35 * self.HEIGHT, 
                             FONT_NAME)
-                self.draw_text("To choose rocket", 
-                            21, 
-                            YELLOW,
-                            0.45 * self.WIDTH,
-                            0.1 * self.HEIGHT, 
-                            FONT_NAME)
-                self.draw_text("navigate with right/left arrows", 
-                            21, 
-                            YELLOW,
-                            0.45 * self.WIDTH,
-                            0.15 * self.HEIGHT, 
-                            FONT_NAME)
-                self.draw_text("Press Enter to submit", 
-                            21, 
-                            YELLOW,
-                            0.45 * self.WIDTH,
-                            0.20 * self.HEIGHT, 
-                            FONT_NAME)
+                
+               
+                       
                 running =  self.process_keys_in_menu('rocket',params)
          
             planet = self.planetArray[self.selectedPlanet]
             
             rocket = pg.transform.scale(self.availableRocketsArray[self.selectedRocket],(2 * ROCKET_W,2 * ROCKET_H))
             
+            
             self.screen.blit(planet,(0,0.9 * self.HEIGHT))
             self.screen.blit(rocket,(0.9 * self.WIDTH,0.8 * self.HEIGHT))
-            
+            self.afterMenu = True
             pg.display.flip()
 
     def process_keys_in_menu(self,parametr,params=[],*args):
         for event in pg.event.get():    
             if event.type == pg.QUIT:
                     self.quit()
-        keys = pg.key.get_pressed()
-        if keys[pg.K_LEFT]:
-            if parametr == 'planet':
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.quit()
                 
-                self.selectedPlanet = (self.selectedPlanet + 1 ) % len(self.planetStats)
-                return True
-            elif parametr == 'rocket':
-                
-                self.selectedRocket = (self.selectedRocket + 1 ) % len(self.availableRocketsArray)
-                return True
-
-        elif keys[pg.K_RIGHT]:
-            if parametr == 'planet':
-                if self.selectedPlanet > 0 : self.selectedPlanet -= 1  
-                else : self.selectedPlanet = len(self.planetStats) - 1   
-                return True
-            elif parametr == 'rocket':
-                if self.selectedRocket > 0 : self.selectedRocket -= 1 
-                else : self.selectedRocket = len(self.availableRocketsArray) - 1 
-                return True
-        elif keys[pg.K_RETURN]:
+                if event.key == pg.K_RIGHT:
+                    if parametr == 'planet':
+                        self.selectedPlanet = (self.selectedPlanet + 1 ) % len(self.planetStats)
+                        return True
+                    elif parametr == 'rocket':
+                        self.selectedRocket = (self.selectedRocket + 1 ) % len(self.availableRocketsArray)
+                        return True
+                if event.key == pg.K_LEFT:
+                    if parametr == 'planet':
+                        if self.selectedPlanet > 0 : self.selectedPlanet -= 1  
+                        else : self.selectedPlanet = len(self.planetStats) - 1   
+                        return True
+                    elif parametr == 'rocket':
+                        if self.selectedRocket > 0 : self.selectedRocket -= 1 
+                        else : self.selectedRocket = len(self.availableRocketsArray) - 1 
+                    return True
+                if event.key == pg.K_RETURN:
+                    params[parametr] = True
             
-            params[parametr] = True
-            
-            if params['planet'] and params['rocket']:
-                # Starts game here
-                self.background = self.spaceImage
-                return False
+                    if params['planet'] and params['rocket']:
+                    # Starts game here
+                        self.background = self.spaceImage
+                        return False
         return True
     
     
@@ -397,96 +412,154 @@ class Game:
         sys.exit()
     
     def draw_data(self):
-        self.draw_text("Score :", 
-                        21, 
-                        YELLOW,
-                        0.1 * self.WIDTH,
-                        0.1 * self.HEIGHT, 
-                        FONT_NAME)
-        self.draw_text(str(self.rocket.score), 
-                        21, 
-                        YELLOW,
-                        0.05 * self.WIDTH,
-                        0.15 * self.HEIGHT, 
-                        FONT_NAME)
-        self.draw_text("Armour :", 
-                        21, 
-                        YELLOW,
-                        0.1 * self.WIDTH,
-                        0.2 * self.HEIGHT, 
-                        FONT_NAME)
-        self.draw_text(str(self.rocket.armour), 
-                        21, 
-                        YELLOW,
-                        0.05 * self.WIDTH,
-                        0.25 * self.HEIGHT, 
-                        FONT_NAME)
+        if not self.rocket.game_over:
+            self.draw_text("Score :", 
+                            21, 
+                            YELLOW,
+                            0.05 * self.WIDTH,
+                            0.1 * self.HEIGHT, 
+                            FONT_NAME)
+            self.draw_text(str(self.rocket.score), 
+                            21, 
+                            YELLOW,
+                            0.1 * self.WIDTH,
+                            0.15 * self.HEIGHT, 
+                            FONT_NAME)
+            self.draw_text("Armour :", 
+                            21, 
+                            YELLOW,
+                            0.05 * self.WIDTH,
+                            0.2 * self.HEIGHT, 
+                            FONT_NAME)
+            self.draw_text(str(self.rocket.armour), 
+                            21, 
+                            YELLOW,
+                            0.1 * self.WIDTH,
+                            0.25 * self.HEIGHT, 
+                            FONT_NAME)
 
-        self.draw_text("Distance to Planet :", 
-                        21, 
-                        YELLOW,
-                        0.6 * self.WIDTH,
-                        0.1 * self.HEIGHT, 
-                        FONT_NAME)
-        self.draw_text(str(int(self.rocket.distanceToPlanet)) +" m" ,21,
-                        YELLOW, 
-                         0.65 * self.WIDTH,
-                         0.15 * self.HEIGHT, 
-                         FONT_NAME)
-        self.draw_text("Engaged engine power:", 
-                        21, 
-                        YELLOW,
-                        0.6 * self.WIDTH,
-                        0.2 * self.HEIGHT, 
-                        FONT_NAME)
-        self.draw_text(str(int(self.rocket.missileThrust/self.rocket.maxMissileThrust * 100)) +" perc" ,21,
-                        YELLOW, 
-                         0.65 * self.WIDTH,
-                         0.25 * self.HEIGHT, 
-                         FONT_NAME)
-        self.draw_text("Velocity:", 
-                        21, 
-                        YELLOW,
-                        0.6 * self.WIDTH,
-                        0.3 * self.HEIGHT, 
-                        FONT_NAME)
-        
+            self.draw_text("Distance to Planet :", 
+                            21, 
+                            YELLOW,
+                            0.6 * self.WIDTH,
+                            0.1 * self.HEIGHT, 
+                            FONT_NAME)
+            self.draw_text(str(int(self.rocket.distanceToPlanet)) +" m" ,21,
+                            YELLOW, 
+                            0.65 * self.WIDTH,
+                            0.15 * self.HEIGHT, 
+                            FONT_NAME)
+            self.draw_text("Velocity:", 
+                            21, 
+                            YELLOW,
+                            0.6 * self.WIDTH,
+                            0.2 * self.HEIGHT, 
+                            FONT_NAME)
+            
 
-        self.draw_text(str(abs(int(self.rocket.vel.y))) +" m/s" ,21,
-                        YELLOW, 
-                         0.6 * self.WIDTH,
-                         0.35 * self.HEIGHT, 
-                         FONT_NAME)
-        
-        if self.rocket.vel.y < 0:
-            self.draw_text("You are going up" ,21,
+            self.draw_text(str(abs(int(self.rocket.vel.y))) +" m/s" ,21,
+                            YELLOW, 
+                            0.65 * self.WIDTH,
+                            0.25 * self.HEIGHT, 
+                            FONT_NAME)
+            self.draw_text("Save landing:", 
+                            21, 
+                            YELLOW,
+                            0.65 * self.WIDTH,
+                            0.3 * self.HEIGHT, 
+                            FONT_NAME)
+            
+
+            self.draw_text(str(abs(int(10 * self.rocket.armour))) +" m/s" ,21,
+                            YELLOW, 
+                            0.6 * self.WIDTH,
+                            0.35 * self.HEIGHT, 
+                            FONT_NAME)
+            
+        if self.rocket.vel.y < 0 :
+            self.draw_text("You are going up" ,30,
                         (155,155,155), 
-                         0.5 * self.WIDTH,
+                         0.4 * self.WIDTH,
                          0.8 * self.HEIGHT, 
                          FONT_NAME)
 
 
-        if self.rocket.landing:
-            self.draw_text("Landing ", 
-                        21, 
-                        YELLOW,
-                        0.45 * self.WIDTH,
-                        0.16 * self.HEIGHT, 
-                        FONT_NAME)
         if self.rocket.landed and self.rocket.result == Result.Success: 
-            self.draw_text("Congratulations ", 
-                                40, 
+            self.draw_text("A long time ago  ", 
+                                30, 
                                 YELLOW,
-                                0.5 * self.WIDTH,
-                                0.5 * self.HEIGHT, 
+                                0.1 * self.WIDTH,
+                                0.2 * self.HEIGHT, 
                                 FONT_NAME)
-        elif self.rocket.landed and self.rocket.result == Result.Fail:
+            self.draw_text("in a galaxy far, far away .... ", 
+                                30, 
+                                YELLOW,
+                                0.1 * self.WIDTH,
+                                0.25 * self.HEIGHT, 
+                                FONT_NAME)
+            self.draw_text("Was borned a great hero, ", 
+                                30, 
+                                YELLOW,
+                                0.1 * self.WIDTH,
+                                0.3 * self.HEIGHT, 
+                                FONT_NAME)
+            self.draw_text("whose mission was to Save Our Space ! ", 
+                                30, 
+                                YELLOW,
+                                0.1 * self.WIDTH,
+                                0.35 * self.HEIGHT, 
+                                FONT_NAME)
+            self.draw_text("Enter - again ", 
+                                30, 
+                                YELLOW,
+                                0.55 * self.WIDTH,
+                                0.4 * self.HEIGHT, 
+                                FONT_NAME)
+            self.draw_text("Escape - close ", 
+                                30, 
+                                YELLOW,
+                                0.6 * self.WIDTH,
+                                0.45 * self.HEIGHT, 
+                                FONT_NAME)
+        elif (self.rocket.landed and self.rocket.result == Result.Fail) or self.rocket.game_over:
             self.draw_text("You failed ", 
-                                40, 
+                                30, 
                                 YELLOW,
-                                0.5 * self.WIDTH,
-                                0.5 * self.HEIGHT, 
+                                0.4 * self.WIDTH,
+                                0.8 * self.HEIGHT, 
                                 FONT_NAME)
+            self.draw_text("Enter - again ", 
+                                30, 
+                                YELLOW,
+                                0.4 * self.WIDTH,
+                                0.2 * self.HEIGHT, 
+                                FONT_NAME)
+            self.draw_text("Escape - close ", 
+                                30, 
+                                YELLOW,
+                                0.4 * self.WIDTH,
+                                0.3 * self.HEIGHT, 
+                                FONT_NAME)
+    
+    def process_keys_end_game(self):
+        for event in pg.event.get():    
+            if event.type == pg.QUIT:
+                    self.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.quit()
+                if event.key == pg.K_RETURN:
+                    self.rocket.game_over = False
+                    self.rocket.landed = False
+                    self.planetAppeared = False
+                    self.inStratosphere = False
+                    self.rocket.kill()
+                    for sprite in self.asteroids:
+                            sprite.kill()
+                    self.showMenu()
+                    self.init_entities()
+                    
+                
 
     def update(self):  
        self.planet_group.update()

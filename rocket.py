@@ -29,7 +29,7 @@ class Rocket(pg.sprite.Sprite):
         
         self.fuel = fuel
         self.weight = weight
-        
+        self.game_over = False
         # parameter that descibes how fast the roket will go in different sides
         self.lateralAcceleration = lateralAcceleration
         self.velocityReduced = True
@@ -48,14 +48,16 @@ class Rocket(pg.sprite.Sprite):
         self.landing = False
         self.landed = False
         self.result = None
+        self.last_update = 0
+        self.frameNumber = 0
         
     # because there are conflicts in main constructor. You can't create planet object without created rocket and vice versa
     def initMaxMissileThrust(self,freeFallAccelaration):
         # Maximal allowed accelaration is acceleration of free fall on planet times . predefind upper boundary
         self.maxMissileThrust = calculateMaxMissleThrust(self,self.game.planet)
-        print(self.maxMissileThrust)
+        
         self.maxMissileThrust = self.game.planet.freeFallAccelaration * self.MTmultiplier
-        print(self.maxMissileThrust)
+        
         # Because rocket should wait untill user will press first key
         self.missileThrust = 0.8 * self.maxMissileThrust
 
@@ -122,13 +124,13 @@ class Rocket(pg.sprite.Sprite):
         else:
             pass
         self.keys = None
-    
-
-    
-        
 
     def update(self):
-        if self.landed:
+
+        if self.armour <= 0:
+            self.explosionAnimation()
+        
+        if self.game_over or self.landed:
             return
         self.processKeys()
         if not self.landing and self.started: 
@@ -145,46 +147,30 @@ class Rocket(pg.sprite.Sprite):
             self.missileThrust -= 0.05 * self.maxMissileThrust
         elif state == Command.DecreaseThrust :
             self.missileThrust = 0    
-    
-    def land(self):
-        pass 
-        # if not self.landing:
-        #     return 
-        # if self.distanceToPlanet > self.image.get_size()[1]:
-        #     # Balanced acceleration
-        #     # At the beginnig rocket trying to stop itself by decreasing speed
-        #     # After its own velocity was succesfully reuced velocityReduced = true - autopilot is turned off 
-        #     # Now onle freeFallAccelaration is taken in account
-        #     if int(self.vel.y) > 0:
-        #         self.acceleration = vec(0,-self.game.planet.freeFallAccelaration)
-        #         self.velocityReduced = True
-        #     elif self.velocityReduced :
-        #         self.acceleration = vec(0,self.game.planet.freeFallAccelaration)
-        #         self.vel = vec(0,0)
-        #         self.rect.y = self.game.HEIGHT - self.image.get_size()[1]
-        #         self.landed = True
-        #     # First -- turn on autopilot to land your rocket
-        #     # Second --system will turn off all side engines
-        #     # Third -- establish speed 
-        #     # Fourth -- will go in straight line
-        #     # Executed too early may affect crush
-            
-        #     self.vel += self.acceleration
+  
+    def explosionAnimation(self):
+        # Stops background moving 
+        self.game_over = True
+        now = pg.time.get_ticks()
+        if  now - self.last_update <= self.game.dt * 1000:
+            return 
+        else:
+            self.last_update = now
 
-            
-        #     coveredDistance = ( self.vel * self.game.dt ) / METERS_IN_ONE_PIXEL 
-        #     self.pos.y += coveredDistance.y
-        #     self.rect.y = self.pos.y
-        #     self.distanceToPlanet -= coveredDistance.y * METERS_IN_ONE_PIXEL
-        
-            
+        arr = self.game.explosionAnimationArray    
+        if self.frameNumber < len(arr):
+         
+            self.image = pg.transform.scale(arr[self.frameNumber],(ROCKET_H, ROCKET_H))
+            self.frameNumber += 1
+        else:
+            self.kill() 
         
     def collide(self):
         for obstacle in self.game.asteroids:
             if self.rect.colliderect(obstacle):
                 if obstacle.type == ObstacleType.Asteroid and not obstacle.explosion:
                     self.collisions += 1
-                    self.armour = 100 - self.collisions/self.allowed_collisions
+                    self.armour = round(1 - self.collisions/self.allowed_collisions,1) * 100
                 elif obstacle.type == ObstacleType.Satellit and not obstacle.explosion:     
                     self.score += 1  
                 obstacle.exploid()
@@ -192,16 +178,20 @@ class Rocket(pg.sprite.Sprite):
     def onPlanetSurface(self):
         # if speed is smaller than ten meters per second than success
         self.landed = True
-        if self.vel.y < 10:
+        if self.vel.y < 10 * self.armour:
+            self.distanceToPlanet = 0
             self.result = Result.Success
             self.vel = vec(0,0)
             self.rect.y = self.game.planet.rect.y - self.rect.size[1]
+            self.game_over = True
+            self.game.afterMenu = False
         else:
-            print('Landed')
+            self.game.afterMenu = False
+            self.game_over = True
             self.distanceToPlanet = 0
             self.result = Result.Fail
             self.rect.y = self.game.planet.rect.y - self.rect.size[1]
-            
+            self.explosionAnimation()
 
 
 
