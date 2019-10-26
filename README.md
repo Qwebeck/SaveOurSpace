@@ -16,7 +16,7 @@ Okazało się że nie jesteśmy jedyną cywilizają we wszechświecie która ma 
 Teraz TY wylatujesz na ratunek innych!
 Masz rakietę, którą możesz niszczyć satelity i ratować świat. Uważaj na planetoidy !
 
-<h1>Start in game</h2?
+<h1>Start in game</h2>
  Najpierw wybierz planetę i rakietę za pomocą klawisz :
  `Rght arrow`,`Left arrow`. Każdy wybór należy potwierdzać za pomocą klawisza `Enter`.
  Po dokonaniu tych czynności pojawisz się w kosmosie. Twoja prędkość będzie rosnąć, bo działa grawitacja.
