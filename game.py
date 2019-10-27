@@ -335,7 +335,7 @@ class Game:
                             0.2 * self.WIDTH,
                             0.1 * self.HEIGHT, 
                             FONT_NAME)   
-                self.draw_text("Manevreability: ", 
+                self.draw_text("Maneuverability: ", 
                             30, 
                             YELLOW,
                             0.05 * self.WIDTH,
@@ -474,7 +474,7 @@ class Game:
                             0.65 * self.WIDTH,
                             0.25 * self.HEIGHT, 
                             FONT_NAME)
-            self.draw_text("Save landing:", 
+            self.draw_text("Safe landing:", 
                             21, 
                             YELLOW,
                             0.65 * self.WIDTH,

@@ -43,7 +43,6 @@ class Rocket(pg.sprite.Sprite):
         self.cured = False
         self.started = True 
         self.keys = None
-        self.landing = False
         self.landed = False
         # result of landing
         self.result = None
@@ -115,8 +114,7 @@ class Rocket(pg.sprite.Sprite):
             self.change_thrust(Command.IncreaseThrust)
         elif self.keys[pg.K_DOWN]:
             self.change_thrust(Command.DecreaseThrust)
-        elif self.keys[pg.K_SPACE]:
-            self.landing = True           
+       
         self.keys = None
 
     def update(self):
@@ -125,10 +123,8 @@ class Rocket(pg.sprite.Sprite):
         if self.game_over or self.landed:
             return
         self.processKeys()
-        if not self.landing and self.started: 
+        if self.started: 
             self.move()
-        else:
-            self.land()
         self.collide()
 
     def change_thrust(self, state):
