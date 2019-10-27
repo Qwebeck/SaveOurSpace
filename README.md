@@ -19,6 +19,11 @@ Okazało się że nie jesteśmy jedyną cywilizacją we wszechświecie która ma
 
 Kiedy uruchomisz grę przed tobą pojawi się okienko, w którym będzie ci proszono wybrać planetę.
 Zmieniać planety możesz za pomocą klawiszów `Right Arrow` oraz `Left Arrow`.
+
+
+<img src="/sreenshots/start_screen.png" width="300">
+
+
 Potwierdzić swój wybór możesz za pomocą `Enter`. Od tego jaką planetę wybierzysz zależą:
 
 - Wysokość na której będziesz startować.
@@ -26,6 +31,8 @@ Potwierdzić swój wybór możesz za pomocą `Enter`. Od tego jaką planetę wyb
 - Jak szybko rakieta będzie się przyspieszać z wyłączonym silnikiem. ( To działa na tej zasadzie, że im cięższa planeta, tym większe przyspieszenie grawitacyjne )
 
 Po wyborze planety będziesz musiał w analogiczny sposób wybrać rakietę. Parametry rakiet:
+
+<img src="/sreenshots/choose_rocket.png" width="300">
 
 - Armour -- jaką ilość zetknięć z planetoidami będzie mogła wytrzymać rakieta
 - Maneuverability -- sterowność rakiety
