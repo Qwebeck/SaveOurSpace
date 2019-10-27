@@ -164,7 +164,8 @@ class Rocket(pg.sprite.Sprite):
                 if obstacle.type == ObstacleType.Asteroid and not obstacle.explosion:
                     self.cured = False
                     self.collisions += 1
-                    self.armour = round(1 - self.collisions/self.allowed_collisions,1) * 100
+                    curr = round(1 - self.collisions/self.allowed_collisions,1) * 100
+                    self.armour = curr if curr < 100 else 100
                 elif obstacle.type == ObstacleType.AidSatellit and not obstacle.explosion:
                     self.score += 1
                     self.collisions -= 1

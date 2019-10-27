@@ -443,7 +443,7 @@ class Game:
                             0.25 * self.HEIGHT, 
                             FONT_NAME)
             if self.rocket.cured:
-                self.draw_text("+ armour", 
+                self.draw_text("Armour Up", 
                             21, 
                             YELLOW,
                             0.1 * self.WIDTH,
@@ -577,7 +577,7 @@ class Game:
        self.planet_group.update()
        self.asteroids.update()
        self.rocket.update()
-       #self.all_sprites.update()
+       
       
 g = Game()
 
