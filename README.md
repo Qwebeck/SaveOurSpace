@@ -60,7 +60,7 @@ Całe pole gry dzieli się na trzy poziomy:
 - Planeta -- miejsce w którym kończy się gra. Musisz ciągłe śledzić za parametrem Safe landing oraz swoją prędkością
 
 <h2>Podsumowanie</h2>
-No na koniec.
+No i na koniec.
 Twoje główne cele:
 
 - Unikać planetoid
