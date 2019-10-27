@@ -38,11 +38,14 @@ class Rocket(pg.sprite.Sprite):
         self.maxMissileThrust = 1
         self.missileThrust = 0
        
-       
+        # serves to notify user when rocket armored growed
+        # works as a signal to function draw text in main game loop
+        self.cured = False
         self.started = True 
         self.keys = None
         self.landing = False
         self.landed = False
+        # result of landing
         self.result = None
         self.last_update = 0
         self.frameNumber = 0
@@ -161,14 +164,18 @@ class Rocket(pg.sprite.Sprite):
                 # that explodes. This situation is handled because there could be two objects on map,
                 # that had collided. It means, that they are still on map, because explotion animation is playing, but they don't exist as instances, 
                 # that should harm rocket in any way
+                
                 if obstacle.type == ObstacleType.Asteroid and not obstacle.explosion:
+                    self.cured = False
                     self.collisions += 1
                     self.armour = round(1 - self.collisions/self.allowed_collisions,1) * 100
                 elif obstacle.type == ObstacleType.AidSatellit and not obstacle.explosion:
                     self.score += 1
                     self.collisions -= 1
+                    self.cured = True
                 elif obstacle.type == ObstacleType.Satellit and not obstacle.explosion:     
-                    self.score += 1  
+                    self.score += 1
+                    self.cured = False  
                 obstacle.exploid()
 
     def onPlanetSurface(self):

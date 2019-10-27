@@ -48,11 +48,15 @@ class Obstacles(pg.sprite.Sprite):
                 self.type = ObstacleType.Asteroid
             else: 
                 self.type = random.choice([ObstacleType.Satellit,ObstacleType.Asteroid,ObstacleType.AidSatellit])
-                if self.type == ObstacleType.Satellit:
-                    self.image = pg.transform.scale(self.game.sattelitsArray[0],(OBSTACLES_SIZE, OBSTACLES_SIZE))
+                if self.type == ObstacleType.AidSatellit:
+                    
+                    self.image = pg.transform.scale(self.game.sattelitsArray[2],(OBSTACLES_SIZE, OBSTACLES_SIZE))
+                elif self.type == ObstacleType.Satellit:
+                    
+                    self.image = pg.transform.scale(random.choice(self.game.sattelitsArray[0:2]),(OBSTACLES_SIZE, OBSTACLES_SIZE))
                 else:
-                    self.image = pg.transform.scale(random.choice(self.game.asteroidsArray[1:2]),(OBSTACLES_SIZE, OBSTACLES_SIZE))
-        
+                    self.image = pg.transform.scale(random.choice(self.game.asteroidsArray),(OBSTACLES_SIZE, OBSTACLES_SIZE))
+
             if self.satInit == True and self.type == ObstacleType.Satellit and Obstacles.obstaclesInLine < Obstacles.maxObstaclesInLine or self.type == ObstacleType.AidSatellit:
                 Obstacles.obstaclesInLine += 1
                 self.pos.x = Obstacles.obstaclesInLineX

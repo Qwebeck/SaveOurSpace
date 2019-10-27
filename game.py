@@ -220,7 +220,7 @@ class Game:
         self.screen.blit(self.background,self.background_rect)
         self.screen.blit(self.second_background,self.second_background_rect)
 
-
+    # global function to draw everythin that should be drowna
     def draw(self):
         # self.screen.blit(self.background,(0,0))
      
@@ -246,6 +246,7 @@ class Game:
         
         pg.display.flip()
 
+    # support function to render and draw test on prefined different positions
     def draw_text(self, text, size, color, x, y, font):
       
         font = pg.font.Font(font, size)
@@ -406,9 +407,11 @@ class Game:
     def quit(self):
         pg.quit()
         sys.exit()
-    
+    # draw stats that rocket have at this moment  
     def draw_data(self):
         if not self.rocket.game_over:
+            
+            
             self.draw_text("Score :", 
                             21, 
                             YELLOW,
@@ -432,6 +435,13 @@ class Game:
                             YELLOW,
                             0.1 * self.WIDTH,
                             0.25 * self.HEIGHT, 
+                            FONT_NAME)
+            if self.rocket.cured:
+                self.draw_text("+ armour", 
+                            21, 
+                            YELLOW,
+                            0.1 * self.WIDTH,
+                            0.3 * self.HEIGHT, 
                             FONT_NAME)
 
             self.draw_text("Distance to Planet :", 
