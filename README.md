@@ -21,7 +21,7 @@ Kiedy uruchomisz grę przed tobą pojawi się okienko, w którym będzie ci pros
 Zmieniać planety możesz za pomocą klawiszów `Right Arrow` oraz `Left Arrow`.
 
 
-<img src="/sreenshots/start_screen.png" width="300">
+<img src="/screenshots/start_screen.png" width="300">
 
 
 Potwierdzić swój wybór możesz za pomocą `Enter`. Od tego jaką planetę wybierzysz zależą:
@@ -32,7 +32,7 @@ Potwierdzić swój wybór możesz za pomocą `Enter`. Od tego jaką planetę wyb
 
 Po wyborze planety będziesz musiał w analogiczny sposób wybrać rakietę. Parametry rakiet:
 
-<img src="/sreenshots/choose_rocket.png" width="300">
+<img src="/screenshots/choose_rocket.png" width="300">
 
 - Armour -- jaką ilość zetknięć z planetoidami będzie mogła wytrzymać rakieta
 - Maneuverability -- sterowność rakiety
@@ -63,7 +63,13 @@ Zwiększając ciąg silnika, redukujesz wpływ przyspieszenia grawitacyjnego. ( 
 Całe pole gry dzieli się na trzy poziomy:
 
 - Pas planetoid -- to wszystko co jest powyżej 15 000 metrów ( odległość nie ma nic wspólnego z życiem :) ). W tym pasie pojawiają się tylko planetoidy. Twoim zadaniem jest unikać ich i starać się utrzymać jak najwięcej armouru do kolejnego poziomu
+
+<img src="/screenshots/asteroid_level.png" width="300">
+
 - Pas satelitów -- faktycznie jest to główna przestrzeń do grania. Tu już zaczynają pojawiać się satelity. Jednak nie wyklucza to tego, że także mogą się pojawić planetoidy, więc musisz uważać.
+
+<img src="/screenshots/aste_sat.png" width="300">
+
 - Planeta -- miejsce w którym kończy się gra. Musisz ciągłe śledzić za parametrem Safe landing oraz swoją prędkością
 
 <h2>Podsumowanie</h2>
