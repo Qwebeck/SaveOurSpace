@@ -275,6 +275,12 @@ class Game:
                             YELLOW,
                             0.62 * self.WIDTH,
                             0.65 * self.HEIGHT, 
+                            FONT_NAME)  
+            self.draw_text("Press Escape to exit", 
+                            21, 
+                            YELLOW,
+                            0.62 * self.WIDTH,
+                            0.7 * self.HEIGHT, 
                             FONT_NAME)     
             if not params['planet']:
                 self.draw_text("Choose a planet", 
