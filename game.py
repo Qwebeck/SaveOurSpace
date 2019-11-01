@@ -7,6 +7,7 @@ from physics import *
 from planet import *
 from obstacles import *
 import sys
+
 class Game:
     def __init__(self):
         pg.init()
